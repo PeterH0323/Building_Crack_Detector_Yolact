@@ -1,0 +1,1 @@
+This repo is base on [yolact_edge](https://github.com/haotian-liu/yolact_edge) 
