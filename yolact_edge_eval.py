@@ -61,7 +61,7 @@ class YolactPredict(object):
         target_fps = round(vid.get(cv2.CAP_PROP_FPS))
         frame_width = round(vid.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_height = round(vid.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        num_frames = round(vid.get(cv2.CAP_PROP_FRAME_COUNT))
+        num_frames = round(vid.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
 
         out = cv2.VideoWriter(out_path, cv2.VideoWriter_fourcc(*"mp4v"), target_fps, (frame_width, frame_height))
 
@@ -73,7 +73,7 @@ class YolactPredict(object):
         moving_statistics = {"conf_hist": []}
 
         try:
-            for i in range(num_frames - 1):
+            for i in range(num_frames):
                 timer.reset()
                 frame_idx = i
                 with timer.env('Video'):
