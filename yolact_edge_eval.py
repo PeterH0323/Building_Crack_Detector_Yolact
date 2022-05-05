@@ -1,4 +1,5 @@
 import logging
+import math
 from pathlib import Path
 
 import cv2
@@ -21,6 +22,7 @@ class YolactPredict(object):
     def __init__(self, trained_model):
         self.cfg = None
         self.args = None
+        self.predict_info = ''
         self.net = self.init_net(trained_model)
 
     def init_net(self, trained_model):
@@ -55,7 +57,29 @@ class YolactPredict(object):
 
         return net
 
-    def save_video(self, in_path: str, out_path: str):
+    @staticmethod
+    def show_real_time_image(image_label, img):
+        """
+        image_label 显示实时推理图片
+        :param image_label: 本次需要显示的 label 句柄
+        :param img: cv2 图片
+        :return:
+        """
+        image_label_width = image_label.width()
+        resize_factor = image_label_width / img.shape[1]
+
+        img = cv2.resize(img, (int(img.shape[1] * resize_factor), int(img.shape[0] * resize_factor)),
+                         interpolation=cv2.INTER_CUBIC)
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # opencv读取的bgr格式图片转换成rgb格式
+        image = QImage(img_rgb[:],
+                       img_rgb.shape[1],
+                       img_rgb.shape[0],
+                       img_rgb.shape[1] * 3,
+                       QImage.Format_RGB888)
+        img_show = QPixmap(image)
+        image_label.setPixmap(img_show)
+
+    def save_video(self, in_path: str, out_path: str, qt_input=None, qt_output=None):
         vid = cv2.VideoCapture(in_path)
 
         target_fps = round(vid.get(cv2.CAP_PROP_FPS))
@@ -72,6 +96,7 @@ class YolactPredict(object):
         every_k_frames = 5
         moving_statistics = {"conf_hist": []}
 
+        show_count = 0
         try:
             for i in range(num_frames):
                 timer.reset()
@@ -113,6 +138,27 @@ class YolactPredict(object):
                     print('\rProcessing Frames  %s %6d / %6d (%5.2f%%)    %5.2f fps        '
                           % (repr(progress_bar), i + 1, num_frames, progress, fps), end='')
 
+                    # 保存推理信息
+                    self.predict_info = '\rProcessing Frames  %6d / %6d (%5.2f%%)    %5.2f fps ' \
+                                        % (i + 1, num_frames, progress, fps)
+
+                    # QT 显示
+                    if qt_input is not None and qt_output is not None:
+                        fps_threshold = 25  # FPS 阈值
+                        show_flag = True
+                        if fps > fps_threshold:  # 如果 FPS > 阀值，则跳帧处理
+                            fps_interval = 15  # 实时显示的帧率
+                            show_unit = math.ceil(fps / fps_interval)  # 取出多少帧显示一帧，向上取整
+                            if int(num_frames) % show_unit != 0:  # 跳帧显示
+                                show_flag = False
+                            else:
+                                show_count += 1
+
+                        if show_flag:
+                            # 推理前的图片 origin_image, 推理后的图片 im0
+                            self.show_real_time_image(qt_input, batch)
+                            self.show_real_time_image(qt_output, processed)
+
         except KeyboardInterrupt:
             print('Stopping early.')
 
@@ -128,7 +174,7 @@ class YolactPredict(object):
         img_numpy = prep_display(preds, frame, None, None, undo_transform=False)
         cv2.imwrite(save_path, img_numpy)
 
-    def evaluate(self, source_path):
+    def evaluate(self, source_path, qt_input=None, qt_output=None):
         self.net.detect.use_fast_nms = self.args.fast_nms
         self.cfg.mask_proto_debug = self.args.mask_proto_debug
 
@@ -150,12 +196,13 @@ class YolactPredict(object):
                 self.eval_image(str(source_path), str(source_path_out), image_id="0")
 
             elif source_type == 'video':
-                self.save_video(str(source_path), str(source_path_out))
+                self.save_video(str(source_path), str(source_path_out), qt_input=qt_input, qt_output=qt_output)
 
             else:
                 print("Source type error")
 
         print(f'eval done, saved in {str(source_path_out)}')
+        return str(source_path_out)
 
 
 if __name__ == '__main__':

@@ -1,5 +1,3 @@
-
-
 import os
 import time
 import sys
@@ -10,13 +8,11 @@ from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
 from PyQt5.QtGui import QColor, QBrush, QIcon, QPixmap
 from PyQt5.QtChart import QDateTimeAxis, QValueAxis, QSplineSeries, QChart
-import torch
 from UI.main_window import Ui_MainWindow
-from utils.datasets import IMG_FORMATS
 
-from yolact_edge_eval import YolactPredict
+from yolact_edge_eval import YolactPredict, IMG_FORMATS
 
-CODE_VER = "V5.0"
+CODE_VER = "V1.0"
 PREDICT_SHOW_TAB_INDEX = 0
 REAL_TIME_PREDICT_TAB_INDEX = 1
 
@@ -135,10 +131,9 @@ class PredictHandlerThread(QThread):
             self.input_tab.setCurrentIndex(REAL_TIME_PREDICT_TAB_INDEX)
             self.output_tab.setCurrentIndex(REAL_TIME_PREDICT_TAB_INDEX)
 
-        with torch.no_grad():
-            self.output_predict_file = self.predict_model.detect(self.parameter_source,
-                                                                 qt_input=qt_input,
-                                                                 qt_output=qt_output)
+        self.output_predict_file = self.predict_model.evaluate(self.parameter_source,
+                                                               qt_input=qt_input,
+                                                               qt_output=qt_output)
 
         if self.output_predict_file != "":
             # 将 str 路径转为 QUrl 并显示
@@ -245,7 +240,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                            self.output_real_time_label,
                                                            real_time_show_predict_flag
                                                            )
-        self.weight_label.setText(f" Using weight : ****** {Path(weight_path[0]).name} ******")
+        self.weight_label.setText(f" Using weight : ****** {Path(weight_path).name} ******")
         # 界面美化
         self.gen_better_gui()
 
@@ -431,9 +426,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print("Close")
 
 
-
-
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
@@ -441,8 +433,8 @@ if __name__ == '__main__':
     if not weight_root.exists():
         raise FileNotFoundError("weights not found !!!")
 
-    weight_file = [item for item in weight_root.iterdir() if item.suffix == ".pt"]
-    weight_root = [str(weight_file[0])]  # 权重文件位置
+    weight_file = [item for item in weight_root.iterdir() if item.suffix == ".pth"]
+    weight_root = str(weight_file[0])  # 权重文件位置
     out_file_root = Path.cwd().joinpath(r'inference/output')
     out_file_root.parent.mkdir(exist_ok=True)
     out_file_root.mkdir(exist_ok=True)
