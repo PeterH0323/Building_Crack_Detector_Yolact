@@ -141,7 +141,7 @@ class YolactPredict(object):
                           % (repr(progress_bar), i + 1, num_frames, progress, fps), end='')
 
                     # 保存推理信息
-                    self.predict_info = '\rProcessing Frames  %6d / %6d (%5.2f%%)    %5.2f fps ' \
+                    self.predict_info = 'Processing Frames  %6d / %6d (%5.2f%%)    %5.2f fps ' \
                                         % (i + 1, num_frames, progress, fps)
 
                     # QT 显示
