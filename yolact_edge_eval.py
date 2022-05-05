@@ -5,6 +5,7 @@ from pathlib import Path
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
+from PyQt5.QtGui import QImage, QPixmap
 
 from eval import parse_args, Detections, prep_display
 from yolact_edge.data import set_cfg
@@ -102,7 +103,8 @@ class YolactPredict(object):
                 timer.reset()
                 frame_idx = i
                 with timer.env('Video'):
-                    frame = torch.from_numpy(vid.read()[1]).cuda().float()
+                    cv2_frame = vid.read()[1]
+                    frame = torch.from_numpy(cv2_frame).cuda().float()
                     batch = transform(frame.unsqueeze(0))
                     # preds = net(batch)
 
@@ -156,7 +158,7 @@ class YolactPredict(object):
 
                         if show_flag:
                             # 推理前的图片 origin_image, 推理后的图片 im0
-                            self.show_real_time_image(qt_input, batch)
+                            self.show_real_time_image(qt_input, cv2_frame)
                             self.show_real_time_image(qt_output, processed)
 
         except KeyboardInterrupt:
