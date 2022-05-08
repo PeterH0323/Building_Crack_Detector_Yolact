@@ -97,7 +97,6 @@ class YolactPredict(object):
         every_k_frames = 5
         moving_statistics = {"conf_hist": []}
 
-        show_count = 0
         try:
             for i in range(num_frames):
                 timer.reset()
@@ -146,15 +145,13 @@ class YolactPredict(object):
 
                     # QT 显示
                     if qt_input is not None and qt_output is not None:
-                        fps_threshold = 25  # FPS 阈值
+                        fps_threshold = 15  # FPS 阈值
                         show_flag = True
                         if fps > fps_threshold:  # 如果 FPS > 阀值，则跳帧处理
-                            fps_interval = 15  # 实时显示的帧率
+                            fps_interval = 10  # 实时显示的帧率
                             show_unit = math.ceil(fps / fps_interval)  # 取出多少帧显示一帧，向上取整
-                            if int(num_frames) % show_unit != 0:  # 跳帧显示
+                            if (i + 1) % show_unit != 0:  # 跳帧显示
                                 show_flag = False
-                            else:
-                                show_count += 1
 
                         if show_flag:
                             # 推理前的图片 origin_image, 推理后的图片 im0
