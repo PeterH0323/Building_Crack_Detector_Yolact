@@ -120,7 +120,7 @@ class PredictHandlerThread(QThread):
         for item, button in self.button_dict.items():
             button.setEnabled(False)
 
-        image_flag = os.path.splitext(self.parameter_source)[-1].lower() in IMG_FORMATS
+        image_flag = os.path.splitext(self.parameter_source)[-1].lower().replace(".", "") in IMG_FORMATS
         qt_input = None
         qt_output = None
 
