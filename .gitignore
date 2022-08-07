@@ -159,3 +159,4 @@ data/video_files
 data/image_files
 data/calib_images
 data/
+!yolact_edge/data
